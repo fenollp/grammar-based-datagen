@@ -1,0 +1,651 @@
+(5.1)
+
+You are an expert programmer and logician. From the given Protocol Buffers excerpt, give me a Why3 model of Subnets.
+```
+syntax = "proto3";
+
+package scaleway.vpc.v2;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "scaleway/std/annotations.proto";
+import "scaleway/std/service_info.proto";
+import "scaleway/std/wrappers.proto";
+import "validate/validate.proto";
+
+option go_package = "gitlab.infra.online.net/protobuf/go/scaleway/vpc/v2;vpc_v2";
+
+service Api {
+  /*******************************************/
+  // MORDOR GENERIC METHODS
+  /*******************************************/
+
+  rpc GetServiceInfo(scaleway.std.GetServiceInfoRequest) returns (scaleway.std.ServiceInfo) {
+    option (google.api.http) = {get: "/vpc/v2/regions/*"};
+  }
+
+  /*******************************************/
+  // VPC RPC METHODS
+  /*******************************************/
+
+  rpc ListVPCs(ListVPCsRequest) returns (ListVPCsResponse) {
+    option (google.api.http) = {get: "/vpc/v2/regions/*/vpcs"};
+  }
+
+  rpc CreateVPC(CreateVPCRequest) returns (VPC) {
+    option (google.api.http) = {
+      post: "/vpc/v2/regions/*/vpcs"
+      body: "*"
+    };
+  }
+
+  rpc GetVPC(GetVPCRequest) returns (VPC) {
+    option (google.api.http) = {get: "/vpc/v2/regions/*/vpcs/{vpc_id}"};
+  }
+
+  rpc UpdateVPC(UpdateVPCRequest) returns (VPC) {
+    option (google.api.http) = {
+      patch: "/vpc/v2/regions/*/vpcs/{vpc_id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteVPC(DeleteVPCRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/vpc/v2/regions/*/vpcs/{vpc_id}"};
+  }
+
+  /*******************************************/
+  // Private Networks RPC METHODS
+  /*******************************************/
+
+  rpc ListPrivateNetworks(ListPrivateNetworksRequest) returns (ListPrivateNetworksResponse) {
+    option (google.api.http) = {get: "/vpc/v2/regions/*/private-networks"};
+  }
+
+  rpc CreatePrivateNetwork(CreatePrivateNetworkRequest) returns (PrivateNetwork) {
+    option (google.api.http) = {
+      post: "/vpc/v2/regions/*/private-networks"
+      body: "*"
+    };
+  }
+
+  rpc GetPrivateNetwork(GetPrivateNetworkRequest) returns (PrivateNetwork) {
+    option (google.api.http) = {get: "/vpc/v2/regions/*/private-networks/{private_network_id}"};
+  }
+
+  rpc UpdatePrivateNetwork(UpdatePrivateNetworkRequest) returns (PrivateNetwork) {
+    option (google.api.http) = {
+      patch: "/vpc/v2/regions/*/private-networks/{private_network_id}"
+      body: "*"
+    };
+  }
+
+  rpc DeletePrivateNetwork(DeletePrivateNetworkRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {delete: "/vpc/v2/regions/*/private-networks/{private_network_id}"};
+  }
+
+  rpc MigrateZonalPrivateNetworks(MigrateZonalPrivateNetworksRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/vpc/v2/regions/*/private-networks/migrate-zonal"
+      body: "*"
+    };
+  }
+
+  rpc EnableDHCP(EnableDHCPRequest) returns (PrivateNetwork) {
+    option (google.api.http) = {
+      post: "/vpc/v2/regions/*/private-networks/{private_network_id}/enable-dhcp"
+      body: "*"
+    };
+  }
+
+  rpc EnableRouting(EnableRoutingRequest) returns (VPC) {
+    option (google.api.http) = {
+      post: "/vpc/v2/regions/*/vpcs/{vpc_id}/enable-routing"
+      body: "*"
+    };
+  }
+
+  /*******************************************/
+  // Subnet RPC METHODS
+  /*******************************************/
+
+  rpc ListSubnets(ListSubnetsRequest) returns (ListSubnetsResponse) {
+    option (google.api.http) = {get: "/vpc/v2/regions/*/subnets"};
+  }
+
+  rpc SetSubnets(SetSubnetsRequest) returns (SetSubnetsResponse) {
+    option (google.api.http) = {
+      put: "/vpc/v2/regions/*/private-networks/{private_network_id}/subnets"
+      body: "*"
+    };
+  }
+
+  rpc AddSubnets(AddSubnetsRequest) returns (AddSubnetsResponse) {
+    option (google.api.http) = {
+      post: "/vpc/v2/regions/*/private-networks/{private_network_id}/subnets"
+      body: "*"
+    };
+  }
+
+  rpc DeleteSubnets(DeleteSubnetsRequest) returns (DeleteSubnetsResponse) {
+    option (google.api.http) = {
+      delete: "/vpc/v2/regions/*/private-networks/{private_network_id}/subnets"
+      body: "*"
+    };
+  }
+}
+
+/*******************************************/
+// Enums
+/*******************************************/
+
+/*******************************************/
+// Ressources
+/*******************************************/
+
+message VPC {
+  // ID of the VPC
+  string id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+
+  // VPC name
+  string name = 2;
+
+  // VPC associated tags
+  repeated string tags = 3 [(validate.rules).repeated.unique = true];
+
+  // Owning organization ID
+  string organization_id = 4 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+
+  // VPC creation date
+  google.protobuf.Timestamp created_at = 5;
+
+  // VPC modification date
+  google.protobuf.Timestamp updated_at = 6;
+
+  // Project ID the VPC is a member of
+  string project_id = 7 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+
+  // Wether the VPC is the default one for its project
+  bool is_default = 8;
+
+  // Private Network count in the VPC
+  uint32 private_network_count = 9;
+
+  bool routing_enabled = 10;
+
+  // VPC region
+  string region = 100;
+}
+
+message Subnet {
+  // ID of the subnet
+  string id = 1 [(scaleway.std.type) = uuid];
+  // Subnet creation date
+  google.protobuf.Timestamp created_at = 2;
+  // Subnet last modification date
+  google.protobuf.Timestamp updated_at = 3;
+
+  // Subnet CIDR
+  string subnet = 4 [(scaleway.std.type) = ipnet];
+
+  // Project ID the subnet is a member of
+  string project_id = 5 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+
+  // Private Network ID the subnet is a member of
+  string private_network_id = 6 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+
+  // VPC ID the subnet is a member of
+  string vpc_id = 7 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+}
+
+message PrivateNetwork {
+  // ID of the Private Network
+  string id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+
+  // Private network name
+  string name = 2;
+
+  // Private network associated tags
+  repeated string tags = 3 [(validate.rules).repeated.unique = true];
+
+  // Owning organization ID
+  string organization_id = 4 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+
+  // Private network creation date
+  google.protobuf.Timestamp created_at = 5;
+
+  // Private network modification date
+  google.protobuf.Timestamp updated_at = 6;
+
+  // Project ID the network is a member of
+  string project_id = 7 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+
+  // Private Network subnets
+  repeated Subnet subnets = 8;
+
+  // VPC ID the network is a member of
+  string vpc_id = 9 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+
+  bool dhcp_enabled = 10;
+
+  // Private network region
+  string region = 100;
+}
+
+message Route {
+  string id = 1 [(scaleway.std.type) = uuid];
+
+  google.protobuf.Timestamp created_at = 2;
+
+  string vpc_id = 3 [(scaleway.std.type) = uuid];
+  string destination = 4 [(scaleway.std.type) = ipnet];
+
+  google.protobuf.StringValue nexthop_resource_id = 5 [(scaleway.std.type) = uuid];
+  google.protobuf.StringValue nexthop_private_network_id = 6 [(scaleway.std.type) = uuid];
+
+  repeated string tags = 8 [(validate.rules).repeated.unique = true];
+  string description = 9 [(validate.rules).string = {max_len: 200}];
+
+  string region = 100;
+}
+
+/*******************************************/
+// VPC Request / Response
+/*******************************************/
+
+message ListVPCsRequest {
+  enum OrderBy {
+    created_at_asc = 0;
+    created_at_desc = 1;
+    name_asc = 2;
+    name_desc = 3;
+  }
+
+  OrderBy order_by = 1;
+  google.protobuf.Int32Value page = 2;
+  google.protobuf.UInt32Value page_size = 3;
+  google.protobuf.StringValue name = 4;
+  repeated string tags = 5 [(validate.rules).repeated.unique = true];
+  google.protobuf.StringValue organization_id = 6 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  google.protobuf.StringValue project_id = 7 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  google.protobuf.BoolValue is_default = 8;
+  google.protobuf.BoolValue routing_enabled = 9;
+}
+
+message ListVPCsResponse {
+  repeated VPC vpcs = 1;
+  uint32 total_count = 2;
+}
+
+message CreateVPCRequest {
+  string project_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  string name = 2;
+  repeated string tags = 3 [(validate.rules).repeated.unique = true];
+  bool enable_routing = 4;
+}
+
+message GetVPCRequest {
+  string vpc_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+}
+
+message UpdateVPCRequest {
+  string vpc_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  google.protobuf.StringValue name = 2;
+  scaleway.std.StringsValue tags = 3;
+}
+
+message DeleteVPCRequest {
+  string vpc_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+}
+
+/*******************************************/
+// Private Network Request / Response
+/*******************************************/
+
+message ListPrivateNetworksRequest {
+  enum OrderBy {
+    created_at_asc = 0;
+    created_at_desc = 1;
+    name_asc = 2;
+    name_desc = 3;
+  }
+
+  OrderBy order_by = 1;
+  google.protobuf.Int32Value page = 2;
+  google.protobuf.UInt32Value page_size = 3;
+  google.protobuf.StringValue name = 4;
+  repeated string tags = 5 [(validate.rules).repeated.unique = true];
+  google.protobuf.StringValue organization_id = 6 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  google.protobuf.StringValue project_id = 7 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  repeated string private_network_ids = 8 [(validate.rules).repeated = {
+    unique: true,
+    items: {
+      string: {uuid: true}
+    }
+  }];
+  google.protobuf.StringValue vpc_id = 9 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  google.protobuf.BoolValue dhcp_enabled = 10;
+}
+
+message ListPrivateNetworksResponse {
+  repeated PrivateNetwork private_networks = 1;
+  uint32 total_count = 2;
+}
+
+message CreatePrivateNetworkRequest {
+  string project_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  string name = 2;
+  repeated string tags = 3 [(validate.rules).repeated.unique = true];
+  repeated string subnets = 4 [
+    (scaleway.std.type) = ipnet,
+    (validate.rules).repeated.unique = true
+  ];
+  google.protobuf.StringValue vpc_id = 5 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+}
+
+message GetPrivateNetworkRequest {
+  string private_network_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+}
+
+message UpdatePrivateNetworkRequest {
+  string private_network_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  google.protobuf.StringValue name = 2;
+  scaleway.std.StringsValue tags = 3;
+}
+
+message DeletePrivateNetworkRequest {
+  string private_network_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+}
+
+message MigrateZonalPrivateNetworksRequest {
+  oneof scope {
+    string organization_id = 1 [
+      (scaleway.std.type) = uuid,
+      (validate.rules).string.uuid = true
+    ];
+    string project_id = 2 [
+      (scaleway.std.type) = uuid,
+      (validate.rules).string.uuid = true
+    ];
+  }
+  repeated string private_network_ids = 3 [(validate.rules).repeated = {
+    unique: true,
+    items: {
+      string: {uuid: true}
+    }
+  }];
+}
+
+message EnableDHCPRequest {
+  string private_network_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+}
+
+message EnableRoutingRequest {
+  string vpc_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+}
+
+message ListSubnetsRequest {
+  enum OrderBy {
+    created_at_asc = 0;
+    created_at_desc = 1;
+  }
+  OrderBy order_by = 1;
+  google.protobuf.Int32Value page = 2;
+  google.protobuf.UInt32Value page_size = 3;
+
+  google.protobuf.StringValue organization_id = 4 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  google.protobuf.StringValue project_id = 5 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+
+  repeated string subnet_ids = 6 [(validate.rules).repeated = {
+    unique: true,
+    items: {
+      string: {uuid: true}
+    }
+  }];
+
+  google.protobuf.StringValue vpc_id = 7 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+}
+
+message ListSubnetsResponse {
+  repeated Subnet subnets = 1;
+  uint32 total_count = 2;
+}
+
+message SetSubnetsRequest {
+  string private_network_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  repeated string subnets = 2 [
+    (scaleway.std.type) = ipnet,
+    (validate.rules).repeated.unique = true
+  ];
+}
+
+message SetSubnetsResponse {
+  repeated string subnets = 1 [
+    (scaleway.std.type) = ipnet,
+    (validate.rules).repeated.unique = true
+  ];
+}
+
+message AddSubnetsRequest {
+  string private_network_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  repeated string subnets = 2 [
+    (scaleway.std.type) = ipnet,
+    (validate.rules).repeated.unique = true
+  ];
+}
+
+message AddSubnetsResponse {
+  repeated string subnets = 1 [
+    (scaleway.std.type) = ipnet,
+    (validate.rules).repeated.unique = true
+  ];
+}
+
+message DeleteSubnetsRequest {
+  string private_network_id = 1 [
+    (scaleway.std.type) = uuid,
+    (validate.rules).string.uuid = true
+  ];
+  repeated string subnets = 2 [
+    (scaleway.std.type) = ipnet,
+    (validate.rules).repeated.unique = true
+  ];
+}
+
+message DeleteSubnetsResponse {
+  repeated string subnets = 1 [
+    (scaleway.std.type) = ipnet,
+    (validate.rules).repeated.unique = true
+  ];
+}
+```
+
+=>
+
+Based on the provided Protocol Buffers excerpt, here's a simplified Why3 model of Subnets. Why3 is a tool for deductive program verification, so the model will be focused on the structure and properties of the data, rather than the specific operations of the API.
+
+```why3
+type uuid
+type timestamp
+
+type ipnet = {
+  id: uuid,
+  created_at: timestamp,
+  updated_at: timestamp,
+  subnet: string,
+  project_id: uuid,
+  private_network_id: uuid,
+  vpc_id: uuid
+}
+
+type subnet_list = {
+  subnets: list(ipnet),
+  total_count: int
+}
+
+type subnet_request = {
+  private_network_id: uuid,
+  subnets: list(string)
+}
+
+type subnet_response = {
+  subnets: list(string)
+}
+
+axiom subnet_id_uniqueness:
+  forall s1, s2: ipnet. s1.id = s2.id -> s1 = s2
+
+axiom subnet_list_total_count_validity:
+  forall sl: subnet_list. length(sl.subnets) <= sl.total_count
+```
+
+This model defines a `ipnet` type to represent a subnet, with fields corresponding to the ones in the Protocol Buffers message. It also defines a `subnet_list` type to represent the result of a list subnets operation, and `subnet_request` and `subnet_response` types for the add, set and delete subnets operations.
+
+The model also includes a couple of axioms to express some properties that we might want to hold for our subnets. For example, `subnet_id_uniqueness` states that no two distinct subnets should have the same ID, and `subnet_list_total_count_validity` states that the total count of subnets should always be greater than or equal to the number of subnets returned in a list.
+
+---
+
+From the above gRPC definitions, extrapolate invariant rules that apply after (or before) a call. Do this for calls pertaining to VPC things. Find a dozen rules per such call.
+
+=>
+
+Based on the provided Protocol Buffers excerpt, here are some potential invariant rules that could apply before or after certain API calls related to VPCs. These rules are not exhaustive and are intended to provide a starting point for thinking about the properties that might be important to maintain in the system.
+
+1. `ListVPCs`:
+* Before the call: The user has the necessary permissions to list VPCs in the specified region.
+* After the call: The total count of VPCs returned in the response is greater than or equal to the number of VPCs in the response list.
+* The VPCs in the response list are a subset of the VPCs that exist in the specified region.
+* The VPCs in the response list have unique IDs.
+* The VPCs in the response list have valid creation and modification dates.
+* The VPCs in the response list belong to valid projects and organizations.
+* The VPCs in the response list have a non-negative private network count.
+* The VPCs in the response list have a valid routing enabled status.
+* The VPCs in the response list have a valid region.
+* The VPCs in the response list have a valid name.
+* The VPCs in the response list have unique tags.
+* The VPCs in the response list have a valid default status.
+2. `CreateVPC`:
+* Before the call: The user has the necessary permissions to create VPCs in the specified region and project.
+* The VPC name is not already in use by another VPC in the same project.
+* The VPC ID is unique and has not been used before.
+* The VPC has a valid creation date.
+* The VPC belongs to a valid project and organization.
+* The VPC has a non-negative private network count.
+* The VPC has a valid routing enabled status.
+* The VPC has a valid region.
+* The VPC has a valid default status.
+* The VPC has unique tags.
+* After the call: The VPC is created and added to the list of VPCs in the specified region and project.
+3. `GetVPC`:
+* Before the call: The user has the necessary permissions to access the specified VPC.
+* The VPC ID is valid and belongs to an existing VPC.
+* After the call: The VPC information returned in the response is accurate and up-to-date.
+* The VPC information returned in the response has a valid ID, name, creation and modification dates, project and organization IDs, private network count, routing enabled status, region, and tags.
+4. `UpdateVPC`:
+* Before the call: The user has the necessary permissions to modify the specified VPC.
+* The VPC ID is valid and belongs to an existing VPC.
+* The new VPC name is not already in use by another VPC in the same project.
+* The new VPC tags are unique.
+* After the call: The VPC information is updated accurately and the modification date is updated.
+* The VPC information has a valid ID, name, creation date, modification date, project and organization IDs, private network count, routing enabled status, region, and tags.
+5. `DeleteVPC`:
+* Before the call: The user has the necessary permissions to delete the specified VPC.
+* The VPC ID is valid and belongs to an existing VPC.
+* The VPC does not have any associated resources (e.g., private networks, subnets, instances) that would be orphaned or deleted as a result of the VPC deletion.
+* After the call: The VPC is removed from the list of VPCs in the specified region and project.
+* All associated resources with the VPC are also deleted.

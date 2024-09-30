@@ -1,0 +1,85 @@
+(3.1)
+
+---
+```
+You are an expert programmer. Given the following texts, write the corresponding eBNF grammar.
+
+OCCO
+OC(C)CCO
+OCCCCO
+OCCNC(=O)NCCCCCCNC(=O)NCCO
+OCCN1C(=O)NC(C1(=O))CCCCNC(=O)NCCO
+Oc1ccc(cc1)CCC(=O)OCCOC(=O)CCc1ccc(cc1)O
+OC(=O)C(N)CCCCN
+OC(=O)C(N)CCCN
+N1CCNCC1
+Nc1ccc(cc1)SSc2ccc(cc2)N
+Nc1ccc(cc1)Cc2ccc(cc2)N
+```
+Réponse
+```ebnf
+<chemical> ::= <molecule> | <molecule> <chemical>
+
+<molecule> ::= <element> | <element> <molecule> | '(' <molecule> ')' <molecule> | '=' <molecule> | <ring>
+
+<element> ::= 'O' | 'C' | 'N' | 'c' | 'S' | '(' <element> ')' | '[' <element> ']'
+
+<ring> ::= <ring_num> <aromatic_chain>
+<ring_num> ::= '1' | '2'
+<aromatic_chain> ::= 'c' { 'c' } '1'
+
+<digit> ::= '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '0'
+```
+---
+
+
+You are an expert programmer and extremely good at extrapolating patterns from text.
+Given the following texts enclosed in multiple backticks and separated by newlines, write a corresponding ANTLR4 grammar that matches all of these examples.
+Once you come up with a satisfying representation for your grammar, make sure to remove the ANTLR4 terms that are of no use. 
+```
+OCCO
+OC(C)CCO
+OCCCCO
+OCCNC(=O)NCCCCCCNC(=O)NCCO
+OCCN1C(=O)NC(C1(=O))CCCCNC(=O)NCCO
+Oc1ccc(cc1)CCC(=O)OCCOC(=O)CCc1ccc(cc1)O
+OC(=O)C(N)CCCCN
+OC(=O)C(N)CCCN
+N1CCNCC1
+Nc1ccc(cc1)SSc2ccc(cc2)N
+Nc1ccc(cc1)Cc2ccc(cc2)N
+```
+
+=>
+
+Here is an ANTLR4 grammar that matches the given examples:
+
+```
+grammar Molecule;
+
+molecule: atom+;
+
+atom: 'O' | 'C' | 'N' | 'S' | '1' | '2' | '(' atom* ')' ')' | '=' atom;
+
+WHITESPACE: [ \t\r\n]+ -> skip;
+```
+
+Explanation:
+
+- `molecule` is the entry point of the grammar and it matches one or more `atom`.
+- `atom` can be either 'O', 'C', 'N', 'S', '1', or '2'. It can also be a parenthesized sequence of `atom` followed by a closing parenthesis. Additionally, it can be an equals sign followed by an `atom`.
+- `WHITESPACE` rule is used to skip spaces, tabs, and newlines.
+
+The grammar is quite permissive and will accept a wide range of inputs. If you want to restrict the grammar to only accept the given examples, you can modify the `atom` rule as follows:
+
+```
+atom: 'O' | 'C' | 'N' | 'S' | '1' | '2'
+     | '(' 'C' atom* ')' ')'
+     | '=' 'O'
+     | 'N' atom 'C' '(' 'O' ')' 'N' atom 'C' '(' 'O' ')' 'N' 'C' atom 'O'
+     | 'N' 'c' '1' atom 'C' '(' 'O' ')' 'N' 'c' '1' atom 'S' 'S' 'c' '2' atom 'c' '2' 'N'
+     | 'N' 'c' '1' atom 'C' 'c' '2' atom 'C' '2' 'N'
+;
+```
+
+This version of the `atom` rule is more restrictive and will only accept the given examples. However, it is also more complex and less readable.

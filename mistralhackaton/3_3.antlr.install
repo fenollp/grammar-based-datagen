@@ -1,0 +1,23 @@
+https://github.com/er-lang/er/blob/master/Makefile
+
+https://www.reddit.com/r/LocalLLaMA/comments/1atyxqz/better_ways_to_prompt_a_llm/
+👉PERSONA: Declare who's speaking. Whether it's a seasoned journalist or a professional health coach, the voice dramatically influences the output's narrative and tone. | Ex: "Imagine you're a financial advisor giving investment advice."
+👉OBJECTIVE: Define what you need from your AI. Craft your tasks with precision. | Ex: "Create a comprehensive guide to indoor gardening."
+👉CONTEXT: Feed the AI a detailed backstory. It's all about supplying any pertinent background information that refines the AI's task execution. | Ex: "The guide is for city dwellers with little to no outdoor space."
+👉FORMAT: Specify your desired output. This can range from articles, scripts, and quizzes, to styles like how-to guides or opinion pieces, and even structures such as headings, lists, or interview style Q&As. 
+👉STYLE: Tailor the AI's style. Think about the tone, rhetorical devices, formality level, and other language nuances. | Ex: "Write in a conversational tone, using metaphors and anecdotes, and maintain a moderate level of formality." 
+
+pip3 install --break-system-packages  git+https://github.com/antlr/antlr4-tools.git@master
+
+https://www.wikiwand.com/en/Van_Wijngaarden_grammar
+
+	https://www.antlr.org/
+# antlr4-parse Molecule.g4 molecule -gui
+OCCNC(=O)NCCCCCCNC(=O)NCCO
+line 1:9 missing ')' at 'N'
+line 1:22 missing ')' at 'N'
+May 25, 2024 3:27:40 PM java.util.prefs.FileSystemPreferences$1 run
+INFO: Created user preferences directory.
+
+antlr4-parse Molecule.g4 molecule -gui <<<'OCCNC(=O)NCCCCCCNC(=O)NCCO'
+

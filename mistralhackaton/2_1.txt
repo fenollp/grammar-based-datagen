@@ -1,0 +1,293 @@
+(2.1)
+
+You are an expert programmer, and you need to write some text that conforms to this ANTLR4 grammar, similar to EBNF, enclosed in triple backticks:
+```
+// EBNF LL(*) grammar. Lexer split due to size.
+
+grammar Er;
+import Lexer;
+
+root : block* EOF ;
+
+block : defty
+      | def
+      | attribute ;
+
+/// Ops | Also some tokens as ANTLR4 concatenates lexemes.
+
+dim : '::' | '\u2237' ; // ∷
+
+orelse :  '||' | 'orelse'  ;  // || && are to replace their synonyms
+andalso : '&&' | 'andalso' ;
+
+compOp : '<' | '=<' | '==' | '>=' | '>' | '/=' | '=/=' | '=:='
+       | '\u2264'|'\u2265' | '\u2260'|'\u2248' | '\u2261'|'\u2262' ; // ≤ ≥ ≠ ≈ ≡ ≢
+
+listOp : '++' | '--' ;
+
+addOp : '+' | '-' | 'bsl' | 'bsr' | 'or' | 'xor' | 'bor' | 'bxor' | '\u22c1' ; // ⋁
+
+mulOp : '*' | '/' | 'div' | 'rem' | 'and' | 'band' | '\u22c0' ; // ⋀
+
+unOp : '+' | '-' | 'not' | 'bnot' | '\u00ac' ; // ¬
+
+etc : '...' | '\u2026' ; // …
+
+fun_ : 'fun' ;
+composeOp : '.' | '\u25e6' | '\u22c5' | '\u2022' ; // ◦ ⋅ •
+pipeOp : '|>' | '-<' | '\u2919' ; // ⤙
+
+lra : '->' | '\u2192' ; // →
+bil : '<<' | '\u00ab' ; // «
+bir : '>>' | '\u00bb' ; // »
+
+generator : '<-' | '<=' | '<~' | '\u2190' | '\u21d0' | '\u219c' ; // ← ⇐ ↜
+
+/// Tokens
+
+atom : Atom ;
+var : Var ;
+float_ : Float ;
+integer : Integer ;
+char_ : Char ;
+string : String | BString ;
+
+/// attribute
+
+attribute : atom (term|fas) 'of' (term|tyRecordFields)
+          | atom (term|fas) ;
+
+fas: (fa (',' integer)*)+ ;
+fa : atom '/' integer ;
+
+tyRecordFields: '{' (tyRecordField (',' tyRecordField)*)? '}' ;
+tyRecordField : atom ('=' expr)? (dim type ('|' type)*)? ;
+
+/// def
+
+def : spec?     func
+    | spec? fun_func ;
+
+func : atom args guard? lra seqExprs ;
+
+fun_func : fa           lra seqExprs ;
+
+args : '(' matchables? ')' ;
+
+// && || replaces Erlang's ,; (in guards)
+guard : 'when' expr ;
+
+/// defty
+
+defty : atom '(' tyMaxs? ')' dim tyMax ('when' tyGuards)? ;
+
+/// spec
+
+spec : atom dim  tyFun          ('when' tyGuards)?
+     | fa   dim (tyFun|subtype) ('when' tyGuards)? ;
+
+tyGuards: tyGuard+ ;
+tyGuard : subtype
+        | (var dim)+ tyMax ;
+
+tyMaxs: tyMax (',' tyMax)* ;
+tyMax : (var dim)? type ('|' type)* ;
+
+subtype : atom (':' atom)* '(' tyMaxs? ')' ;
+
+type : type '..'  type
+     | type addOp type
+     | type mulOp type
+     |       unOp type
+     | '(' tyMax ')'
+     | var | atom | integer
+     | subtype
+     | '['               ']'
+     | '[' tyMax         ']'
+     | '[' tyMax ',' etc ']'
+     | tyRecord
+     | tyMap
+     | '{' tyMaxs? '}'
+     | tyBinary
+     | fun_ '(' tyFun? ')' ;
+
+tyFun : '(' (etc|tyMaxs)? ')' lra tyMax ;
+
+tyRecord : '#{' atom '}' ;
+
+tyMap : '#{' tyMapAssocs? '}' ;
+tyMapAssocs: tyMapAssoc (',' tyMapAssoc)* ;
+tyMapAssoc : tyMax '=>' tyMax ;
+
+tyBinary : bil                               bir
+         | bil tyBinaryBase                  bir
+         | bil                  tyBinaryUnit bir
+         | bil tyBinaryBase ',' tyBinaryUnit bir ;
+tyBinaryBase : var ':'         type ;
+tyBinaryUnit : var ':' var '*' type ;
+
+/// expr | seqExprs | exprMax
+
+exprs: expr (',' expr)* ;
+expr : functionCall
+     | expr      '!' expr
+     | expr    mulOp expr
+     | expr    addOp expr
+     | expr   listOp expr
+     | expr   compOp expr
+     | expr  andalso expr
+     | expr   orelse expr
+     |          unOp expr
+     | matchable '=' expr
+     | mc | lc | bc | tc // Comprehensions
+     | begin
+     | if_
+     | cond
+     | case_
+     | receive
+     | fun
+     | try_
+     | piped
+     | expr composeOp expr
+     | exprMax ;
+
+exprMax : var | '(' expr ')'
+        | term | record ;
+
+seqExprs : expr+ ;
+
+matchables: matchable (',' matchable)* ;
+matchable : matchable  mulOp matchable
+          | matchable  addOp matchable
+          | matchable listOp matchable
+          |             unOp matchable
+          | matchable    '|' matchable // Disjoint union
+          | matchable    '=' matchable // Lesser precedence
+          | var | '(' matchable ')'
+          | term | record ;
+
+/// Detailed expressions
+
+params : '(' exprs? ')' ;
+functionCall :                    ':' params
+             |                   atom params
+             | (exprMax ':')+ exprMax params
+             | '('            exprMax params ')' ;
+
+term : char_
+     | integer
+     | float_
+     | string
+     | atom
+     | map
+     | list
+     | binary
+     | tuple
+     | lr | br | tr ; // Ranges
+
+list : '['      ']'
+     | '[' expr tail ;
+tail :          ']'
+     | '|' expr ']'
+     | ',' expr tail ;
+
+// Key-Value Stores
+record : recEmpty | recCreateMatch | recRead | '#{' expr atom  recAssocs '}' ;
+map    : mapEmpty | mapCreateMatch | mapRead | '#{' expr       mapAssocs '}' ;
+recEmpty : '#{' atom '}' ;
+mapEmpty : '#{'      '}' ;
+recCreateMatch : '#{' atom  recAssocs '}' ;
+mapCreateMatch : '#{'       mapAssocs '}' ;
+recRead : '#{' expr atom  atom                   '}' ;
+mapRead : '#{' expr       (functionCall|exprMax) '}' ;
+//^: (…) instead of expr disambiguates wrt recCreateMatch.
+recAssocs: recAssoc (',' recAssoc)* ;
+recAssoc : (atom|var)    '=' expr ;
+mapAssocs: mapAssoc (',' mapAssoc)* ;
+mapAssoc : expr  (':='|'=>') expr ;
+
+binary : bil binElements? bir ;
+binElements: binElement (',' binElement)* ;
+binElement : expr (':' exprMax)? ('/' binType ('-' binType)*)? ;
+binType : atom (':' integer)? ;
+
+tuple : '{' exprs? '}' ;
+
+lc :  '[' seqExprs       gens ']' ;
+bc :  bil seqExprs       gens bir ;
+mc : '#{' expr '=>' expr gens '}' ; //seqExprs? FIXME
+tc :  '{' seqExprs       gens '}' ;
+
+lr :  '[' expr '..' expr ']' ;
+br :  bil expr '..' expr bir ;
+tr :  '{' expr '..' expr '}' ;
+
+begin : 'begin' seqExprs 'end' ;
+
+if_ : 'if' expr lra expr 'if' 'not' lra expr ;
+
+cond : 'cond' (condClause)+ 'end' ;
+condClause : expr lra seqExprs ;
+
+case_ : 'case' expr of 'end' ;
+
+receive : 'receive' clauses                'end'
+        | 'receive'         'after' clause 'end'
+        | 'receive' clauses 'after' clause 'end' ;
+
+fun : fun_ (':' | (exprMax ':')* exprMax)      '/' (var|integer)
+    | fun_ (':' | (exprMax ':')* exprMax) args '/' (var|integer)
+ // | fun_ (':' | (atom    ':')* atom   ) args '/' (var|integer)
+    | fun_ funClause+ 'end' ;
+
+try_ : 'try' seqExprs of? 'catch' catchClauses                  'end'
+     | 'try' seqExprs of? 'catch' catchClauses 'after' seqExprs 'end'
+     | 'try' seqExprs of?                      'after' seqExprs 'end' ;
+
+piped : exprMax (pipeOp fun)+ ;
+
+/// Utils | Exists mainly for compactness
+
+of : 'of' clauses ;
+
+clauses : (clause | clauseGuard)+ ;
+clause :      matchable       lra seqExprs ;
+clauseGuard : matchable guard lra seqExprs ;
+
+funClause : args       guard? lra seqExprs ;
+
+catchClauses: catchClause+ ;
+catchClause : (exprMax ':')? (clause|clauseGuard) ;
+
+gen_ : '|' gen ;
+gens: gen_ (gen_ | gen | expr)* ;
+gen : matchable ':=' matchable '<-'      expr
+    | matchable                generator expr ;
+```
+
+=>
+
+Sure, I can help you create a simple text that conforms to this ANTLR4 grammar. The grammar seems to be for a language similar to Erlang, so I'll try to keep that in mind. Here's a basic example:
+
+```
+fun fun_name(arg1, arg2) when arg1 > arg2 ->
+  begin
+    var1 = arg1,
+    var2 = arg2,
+    result = var1 * var2
+  end
+  result.
+
+defty type_name(tyMaxs) :: tyMax when tyGuards.
+
+attribute attr_name of term_or_fas.
+attribute attr_name term_or_fas.
+```
+
+In this example:
+
+- The `fun` block defines a function named `fun_name` that takes two arguments, `arg1` and `arg2`. The guard clause `arg1 > arg2` specifies that the function body should only be executed if `arg1` is greater than `arg2`. The function body is enclosed in a `begin`...`end` block, and it computes the product of `arg1` and `arg2`.
+
+- The `defty` block is a type definition. `type_name` is the name of the type, `tyMaxs` and `tyMax` are placeholders for the actual type specifications, and `tyGuards` is a placeholder for any type guards.
+
+- The `attribute` blocks are examples of attribute definitions. The first one associates the attribute `attr_name` with `term_or_fas` (a placeholder for the actual term or feature-attribute pair), and the second one simply associates `attr_name` with `term_or_fas`.

@@ -1,0 +1,18 @@
+(1.1)
+
+You are an expert programmer. You need to write some text that conforms to an ANTLR4 grammar, similar to EBNF or BNF.
+Be extremely concise and only output that text and no explaination.
+Here is the given grammar, enclosed in triple backticks:
+
+```
+event ::= "QueryEvent(" constraint ")"
+constraint ::= "(&" constraint constraint ")"
+| "(start_?" date ")"
+| "(attendee_?" attendee attendee ")"
+date ::= "Wednesday"
+attendee ::= "Bob" | "Carol"
+```
+
+=>
+
+QueryEvent((&(start_? Wednesday)(attendee_? Bob Carol)))())
